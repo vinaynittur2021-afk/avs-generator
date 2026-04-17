@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>After Visit Summary Generator — VA Long Beach Hematology/Oncology</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --va-navy:        #112e51;
+    --va-blue:        #205493;
+    --va-blue-light:  #4773aa;
+    --va-red:         #e31c3d;
+    --va-green:       #2e8540;
+    --va-green-light: #e7f3e8;
+    --va-gold:        #fdb81e;
+    --va-gray-dark:   #323a45;
+    --va-gray:        #5b616b;
+    --va-gray-medium: #aeb0b5;
+    --va-gray-light:  #f1f1f1;
+    --va-gray-cool:   #dce4ef;
+    --va-white:       #ffffff;
+    --font: 'Source Sans 3','Source Sans Pro','Helvetica Neue',Helvetica,Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--va-gray-light);color:var(--va-gray-dark);font-size:17px;line-height:1.6;min-height:100vh}
+
+  .site-header{background:var(--va-navy);border-bottom:4px solid var(--va-red)}
+  .header-inner{max-width:1024px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .header-tool-name{background:var(--va-red);color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 14px;border-radius:3px;white-space:nowrap}
+
+  .breadcrumb{background:var(--va-white);border-bottom:1px solid var(--va-gray-cool);padding:8px 24px}
+  .breadcrumb-inner{max-width:1024px;margin:0 auto;font-size:14px;color:var(--va-gray);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .breadcrumb a{color:var(--va-blue);text-decoration:none}
+  .breadcrumb a:hover{text-decoration:underline}
+  .breadcrumb .sep{color:var(--va-gray-medium)}
+  .breadcrumb .current{color:var(--va-gray-dark);font-weight:600}
+
+  .page-wrap{max-width:1024px;margin:0 auto;padding:36px 24px 64px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+  @media(max-width:768px){.page-wrap{grid-template-columns:1fr;padding:24px 16px 48px}.header-inner{flex-direction:column;align-items:flex-start;gap:10px}}
+
+  .page-title{grid-column:1/-1;padding-bottom:20px;border-bottom:2px solid var(--va-gray-cool);margin-bottom:4px}
+  .page-title h1{font-size:28px;font-weight:700;color:var(--va-navy);line-height:1.2;margin-bottom:8px}
+  .page-title p{font-size:16px;color:var(--va-gray);max-width:600px;line-height:1.55}
+
+  .panel{background:var(--va-white);border:1px solid var(--va-gray-cool);border-top:4px solid var(--va-blue);border-radius:0 0 4px 4px}
+  .panel.output-panel{border-top-color:var(--va-navy)}
+  .panel-header{padding:16px 20px 14px;border-bottom:1px solid var(--va-gray-cool)}
+  .panel-header h2{font-size:16px;font-weight:700;color:var(--va-navy);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+  .panel-header p{font-size:13px;color:var(--va-gray)}
+  .panel-body{padding:20px}
+
+  .hipaa-notice{background:var(--va-green-light);border:1px solid #c6e3c7;border-left:4px solid var(--va-green);border-radius:3px;padding:10px 14px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start}
+  .hipaa-notice-icon{color:var(--va-green);font-size:16px;margin-top:2px;flex-shrink:0}
+  .hipaa-notice p{font-size:13px;color:#1a4a1e;line-height:1.5}
+  .hipaa-notice strong{font-weight:700}
+
+  .field-group{margin-bottom:20px}
+  .field-label{display:block;font-size:15px;font-weight:700;color:var(--va-gray-dark);margin-bottom:4px}
+  .field-hint{font-size:13px;color:var(--va-gray);margin-bottom:6px;display:block}
+  textarea{width:100%;background:var(--va-white);border:2px solid var(--va-gray-medium);border-radius:3px;padding:10px 12px;font-family:var(--font);font-size:15px;color:var(--va-gray-dark);line-height:1.55;resize:vertical;outline:none;transition:border-color .15s}
+  textarea:focus{border-color:var(--va-blue);box-shadow:0 0 0 3px rgba(32,84,147,.18)}
+  textarea::placeholder{color:var(--va-gray-medium)}
+
+  .btn-primary{background:var(--va-blue);color:#fff;border:2px solid var(--va-blue);border-radius:3px;padding:12px 22px;font-family:var(--font);font-size:16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s,border-color .15s;letter-spacing:.01em}
+  .btn-primary:hover:not(:disabled){background:var(--va-navy);border-color:var(--va-navy)}
+  .btn-primary:focus{outline:3px solid var(--va-gold);outline-offset:2px}
+  .btn-primary:disabled{background:var(--va-gray-medium);border-color:var(--va-gray-medium);cursor:not-allowed}
+  .btn-secondary{background:transparent;color:var(--va-blue);border:2px solid var(--va-blue);border-radius:3px;padding:12px 22px;font-family:var(--font);font-size:16px;font-weight:700;cursor:pointer;transition:background .15s,color .15s;letter-spacing:.01em}
+  .btn-secondary:hover{background:#e8eef6}
+  .btn-secondary:focus{outline:3px solid var(--va-gold);outline-offset:2px}
+  .btn-link{background:none;border:none;color:var(--va-blue);font-family:var(--font);font-size:15px;cursor:pointer;text-decoration:underline;padding:0}
+  .btn-link:hover{color:var(--va-navy)}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:4px}
+
+  .output-placeholder{padding:48px 20px;text-align:center;color:var(--va-gray);display:flex;flex-direction:column;align-items:center;gap:12px}
+  .placeholder-icon{width:56px;height:56px;background:var(--va-gray-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--va-gray-medium)}
+  .output-placeholder strong{font-size:16px;font-weight:700;color:var(--va-gray-dark);display:block}
+  .output-placeholder p{font-size:14px;max-width:240px}
+
+  .loading-state{display:none;padding:48px 20px;text-align:center;flex-direction:column;align-items:center;gap:14px}
+  .loading-state.active{display:flex}
+  .va-spinner{width:36px;height:36px;border:3px solid var(--va-gray-cool);border-top-color:var(--va-blue);border-radius:50%;animation:spin .75s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-state p{font-size:15px;color:var(--va-gray)}
+  .loading-state strong{display:block;font-size:16px;font-weight:700;color:var(--va-navy);margin-bottom:4px}
+
+  .avs-output{display:none;animation:fadeIn .3s ease}
+  .avs-output.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .phi-bar{background:var(--va-gray-light);border-bottom:1px solid var(--va-gray-cool);padding:10px 20px;font-size:13px;color:var(--va-gray);font-style:italic}
+  .avs-body{padding:20px;font-size:15px;line-height:1.7;color:var(--va-gray-dark)}
+  .avs-body h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--va-blue);border-bottom:2px solid var(--va-gray-cool);padding-bottom:5px;margin:20px 0 8px}
+  .avs-body h3:first-child{margin-top:0}
+  .avs-body p{margin-bottom:6px}
+  .avs-body ul{padding-left:20px;margin-bottom:6px}
+  .avs-body li{margin-bottom:4px}
+  .avs-body strong{color:var(--va-navy)}
+  .avs-footer-line{margin-top:20px;padding-top:14px;border-top:1px solid var(--va-gray-cool);font-size:13px;color:var(--va-gray);font-style:italic}
+
+  .avs-actions{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--va-gray-cool);background:var(--va-gray-light);border-radius:0 0 4px 4px;flex-wrap:wrap}
+  .btn-sm{background:var(--va-white);border:1px solid var(--va-gray-medium);border-radius:3px;padding:7px 14px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--va-blue);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+  .btn-sm:hover{background:var(--va-gray-cool);border-color:var(--va-blue)}
+
+  .error-box{display:none;background:#fef0f0;border:1px solid #f9c3c3;border-left:4px solid var(--va-red);border-radius:3px;padding:12px 16px;margin:16px 20px;font-size:14px;color:#8b1a1a;line-height:1.5}
+  .error-box.active{display:block}
+
+  .site-footer{background:var(--va-navy);padding:24px;text-align:center}
+  .site-footer p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.6}
+  .site-footer a{color:rgba(255,255,255,.75)}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <span class="header-tool-name">Hematology / Oncology</span>
+  </div>
+</header>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <div class="breadcrumb-inner">
+    <span class="current">After Visit Summary Generator</span>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-title">
+    <h1>After Visit Summary Generator</h1>
+    <p>Enter a PHI-free clinical summary and care plan. The tool generates a patient-ready After Visit Summary in plain, accessible English for Hematology/Oncology.</p>
+  </div>
+
+  <!-- INPUT -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Clinical Input</h2>
+      <p>PHI-free entries only — no patient name, DOB, or MRN</p>
+    </div>
+    <div class="panel-body">
+      <div class="hipaa-notice">
+        <span class="hipaa-notice-icon">✔</span>
+        <p><strong>HIPAA reminder:</strong> Do not enter patient name, date of birth, MRN, or any other direct identifiers. Use age, sex, diagnosis, and clinical details only.</p>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="oneliner">PHI-free clinical one-liner</label>
+        <span class="field-hint">Diagnosis, staging, key biomarkers, treatment history — no name, DOB, or MRN</span>
+        <textarea id="oneliner" rows="5" placeholder="e.g., 67F with stage IIIA NSCLC (EGFR exon 19 del+), s/p 4 cycles carboplatin/pemetrexed, now on osimertinib maintenance…"></textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="careplan">Care plan for today's visit</label>
+        <span class="field-hint">Next steps, medications, labs, imaging, referrals, return precautions</span>
+        <textarea id="careplan" rows="8" placeholder="e.g., Continue osimertinib 80mg daily. Repeat CT chest/abdomen in 8 weeks. Labs in 2 weeks (CBC, CMP). Follow up in clinic 4 weeks…"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="generateBtn" onclick="generateAVS()">Generate AVS ↗</button>
+        <button class="btn-secondary" onclick="clearForm()">Clear</button>
+        <button class="btn-link" onclick="loadExample()">Load example</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="panel output-panel">
+    <div class="panel-header">
+      <h2>After Visit Summary</h2>
+      <p>Patient-ready · plain English · printable</p>
+    </div>
+    <div class="output-placeholder" id="outputPlaceholder">
+      <div class="placeholder-icon">📋</div>
+      <div>
+        <strong>Ready to generate</strong>
+        <p>Complete the clinical input and click Generate AVS.</p>
+      </div>
+    </div>
+    <div class="loading-state" id="loadingState">
+      <div class="va-spinner"></div>
+      <div>
+        <strong>Generating summary…</strong>
+        <p id="loadingLabel">Analyzing clinical information</p>
+      </div>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+    <div class="avs-output" id="avsOutput">
+      <div class="phi-bar">Patient Name: ________________________________&nbsp;&nbsp;&nbsp;Date of Birth: _______________&nbsp;&nbsp;<em>(hand-write before printing)</em></div>
+      <div class="avs-body" id="avsBody"></div>
+    </div>
+    <div class="avs-actions" id="avsActions" style="display:none;">
+      <button class="btn-sm" onclick="copyAVS()">📋 Copy text</button>
+      <button class="btn-sm" onclick="printAVS()">🖨 Print</button>
+      <button class="btn-sm" onclick="resetOutput()">↺ New entry</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <p>Hematology/Oncology · After Visit Summary Generator<br>
+  For clinical staff use only · Not a substitute for physician judgment</p>
+</footer>
+
+<script>
+  let currentText = '';
+  const SYSTEM_PROMPT = `You are an After Visit Summary (AVS) generator for VA Long Beach Healthcare System, Hematology/Oncology department. When given a PHI-free clinical one-liner and care plan, generate a warm, plain-English After Visit Summary a patient or family can understand without medical training. Format using ### section headers: ### Your Diagnosis, ### Your Treatment History, ### What Happened at Today's Visit, ### Your Medications, ### What to Watch For, ### Your Next Steps, ### When to Call Your Care Team. Rules: 8th-grade reading level; explain every medical term in parentheses; warm reassuring tone; no PHI; 3-8 bullets per section; always include fever >= 100.4F in the call-team section; use - for bullets; end with: VA Long Beach Healthcare System | Hematology/Oncology | Questions? Contact your care team. Plain text and ### headers only.`;
+  const loadingMessages = ['Analyzing clinical information','Translating medical terms to plain English','Structuring patient sections','Finalizing your summary'];
+
+  function clearForm() {
+    document.getElementById('oneliner').value = '';
+    document.getElementById('careplan').value = '';
+    resetOutput();
+  }
+
+  function resetOutput() {
+    document.getElementById('outputPlaceholder').style.display = 'flex';
+    document.getElementById('loadingState').className = 'loading-state';
+    document.getElementById('avsOutput').className = 'avs-output';
+    document.getElementById('avsActions').style.display = 'none';
+    document.getElementById('errorBox').className = 'error-box';
+  }
+
+  function loadExample() {
+    document.getElementById('oneliner').value = '67F with stage IIIA NSCLC (EGFR exon 19 del+), s/p 4 cycles carboplatin/pemetrexed, now on osimertinib maintenance. Most recent CT chest shows stable disease. No new symptoms.';
+    document.getElementById('careplan').value = '- Continue osimertinib 80mg daily\n- Repeat CT chest/abdomen in 8 weeks\n- Labs in 2 weeks: CBC, CMP, hepatic function panel\n- Follow up in clinic in 4 weeks\n- Counseled on side effects: rash, diarrhea, nail changes\n- Referral placed for pulmonary rehab\n- Call clinic immediately for fever >= 100.4F or new shortness of breath';
+  }
+
+  async function generateAVS() {
+    const oneliner = document.getElementById('oneliner').value.trim();
+    const careplan = document.getElementById('careplan').value.trim();
+    if (!oneliner || !careplan) { showError('Please fill in both fields before generating.'); return; }
+    document.getElementById('outputPlaceholder').style.display = 'none';
+    document.getElementById('avsOutput').className = 'avs-output';
+    document.getElementById('avsActions').style.display = 'none';
+    document.getElementById('errorBox').className = 'error-box';
+    document.getElementById('loadingState').className = 'loading-state active';
+    document.getElementById('generateBtn').disabled = true;
+    let msgIdx = 0;
+    const msgInterval = setInterval(() => { msgIdx = (msgIdx+1)%loadingMessages.length; document.getElementById('loadingLabel').textContent = loadingMessages[msgIdx]; }, 4000);
+    try {
+      const res = await fetch('/api/generate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({oneliner, careplan}) });
+      clearInterval(msgInterval);
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || `Server error (${res.status})`); }
+      const data = await res.json();
+      currentText = data.avs;
+      document.getElementById('loadingState').className = 'loading-state';
+      renderAVS(currentText);
+      document.getElementById('avsOutput').className = 'avs-output active';
+      document.getElementById('avsActions').style.display = 'flex';
+    } catch(err) {
+      clearInterval(msgInterval);
+      document.getElementById('loadingState').className = 'loading-state';
+      showError(err.message);
+    }
+    document.getElementById('generateBtn').disabled = false;
+  }
+
+  function renderAVS(text) {
+    const lines = text.split('\n');
+    let html = '', ulOpen = false;
+    for (const line of lines) {
+      const t = line.trim();
+      if (!t) { if (ulOpen) { html += '</ul>'; ulOpen = false; } continue; }
+      if (t.startsWith('### ')) { if (ulOpen) { html += '</ul>'; ulOpen = false; } html += `<h3>${esc(t.slice(4))}</h3>`; }
+      else if (t.startsWith('- ') || t.startsWith('• ')) { if (!ulOpen) { html += '<ul>'; ulOpen = true; } html += `<li>${esc(t.replace(/^[-•]\s+/,''))}</li>`; }
+      else if (t.startsWith('VA Long Beach')) { if (ulOpen) { html += '</ul>'; ulOpen = false; } html += `<p class="avs-footer-line">${esc(t)}</p>`; }
+      else { if (ulOpen) { html += '</ul>'; ulOpen = false; } html += `<p>${esc(t)}</p>`; }
+    }
+    if (ulOpen) html += '</ul>';
+    document.getElementById('avsBody').innerHTML = html;
+  }
+
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function showError(msg) { const el = document.getElementById('errorBox'); el.textContent = '⚠ ' + msg; el.className = 'error-box active'; }
+  function copyAVS() { navigator.clipboard.writeText(currentText).then(() => { const b = event.currentTarget, o = b.textContent; b.textContent = '✓ Copied'; setTimeout(()=>b.textContent=o,2000); }); }
+  function printAVS() {
+    const w = window.open('','_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>After Visit Summary — VA Long Beach Oncology</title><style>body{font-family:'Source Sans Pro',Arial,sans-serif;max-width:680px;margin:40px auto;font-size:13px;line-height:1.7;color:#323a45}.hdr{border-bottom:3px solid #112e51;padding-bottom:10px;margin-bottom:16px}.hdr h1{font-size:15px;color:#112e51;margin:0 0 2px}.hdr p{font-size:12px;color:#5b616b;margin:0}.phi{border:1px solid #aeb0b5;padding:8px 12px;border-radius:3px;font-size:12px;color:#5b616b;margin-bottom:16px;background:#f1f1f1}h3{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#205493;border-bottom:1.5px solid #dce4ef;padding-bottom:4px;margin:16px 0 6px;font-weight:700}p,li{margin:3px 0}ul{padding-left:18px}.avs-footer-line{margin-top:20px;padding-top:10px;border-top:1px solid #dce4ef;font-size:11px;color:#5b616b;font-style:italic}</style></head><body><div class="hdr"><h1>VA Long Beach Healthcare System — Hematology / Oncology</h1><p>After Visit Summary · For patient use · Not for clinical decision-making</p></div><div class="phi">Patient Name: ________________________________ &nbsp;&nbsp; Date of Birth: _______________ &nbsp;&nbsp; Visit Date: _______________</div>${document.getElementById('avsBody').innerHTML}</body></html>`);
+    w.document.close(); w.print();
+  }
+</script>
+</body>
+</html>
